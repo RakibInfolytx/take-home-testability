@@ -1,0 +1,39 @@
+{
+  "name": "take-home-testability",
+  "version": "1.0.0",
+  "description": "Performance testing framework for API endpoints using k6",
+  "main": "index.js",
+  "scripts": {
+    "test:all": "bash scripts/run-all-tests.sh",
+    "test:load": "k6 run tests/load-test.js",
+    "test:stress": "k6 run tests/stress-test.js",
+    "test:soak": "k6 run tests/soak-test.js",
+    "test:spike": "k6 run tests/spike-test.js",
+    "test:workflow": "k6 run tests/workflows/course-completion-workflow.js",
+    "test:endpoint:login": "k6 run tests/endpoints/login-test.js",
+    "test:endpoint:topics": "k6 run tests/endpoints/topics-test.js",
+    "test:endpoint:courses": "k6 run tests/endpoints/courses-test.js",
+    "test:endpoint:enroll": "k6 run tests/endpoints/enroll-test.js",
+    "test:endpoint:quiz": "k6 run tests/endpoints/quiz-complete-test.js",
+    "test:endpoint:progress": "k6 run tests/endpoints/update-progress-test.js",
+    "docker:build": "docker build -t k6-performance-tests .",
+    "docker:run": "docker-compose up",
+    "docker:run:monitoring": "docker-compose --profile monitoring up",
+    "clean": "rm -rf results/*.json results/*.html"
+  },
+  "keywords": [
+    "k6",
+    "performance-testing",
+    "load-testing",
+    "stress-testing",
+    "api-testing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RakibInfolytx/take-home-testability"
+  }
+}
+

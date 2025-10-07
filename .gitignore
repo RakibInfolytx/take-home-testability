@@ -1,12 +1,4 @@
-# Environment files
-.env
 
-# k6 output files
-*.html
-*.json
-*.xml
-summary.txt
-results/
 
 # Node modules (if using any JS tooling)
 node_modules/
@@ -21,13 +13,5 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
 
-# Docker
-.docker/
-
-# Test results
-test-results/
-reports/
 

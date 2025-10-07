@@ -1,0 +1,33 @@
+# Environment files
+.env
+
+# k6 output files
+*.html
+*.json
+*.xml
+summary.txt
+results/
+
+# Node modules (if using any JS tooling)
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+.docker/
+
+# Test results
+test-results/
+reports/
+

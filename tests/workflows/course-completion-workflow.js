@@ -1,14 +1,9 @@
 import { sleep, check, group } from 'k6';
-import { login, getAuthHeaders } from '../../modules/auth.js';
-import { getTopics, getAllCoursesFromTopics } from '../../modules/topics.js';
+import { login } from '../../modules/auth.js';
+import { getTopics } from '../../modules/topics.js';
 import { getCourses, updateCourseProgress, markQuizComplete, getCourseById } from '../../modules/courses.js';
 import { enrollInCourse, getUserEnrollments } from '../../modules/enrollment.js';
-import { 
-  selectRandom, 
-  generateProgressData,
-  generateQuizData,
-  randomSleep 
-} from '../../utils/dataGenerator.js';
+import { selectRandom, getValidCoursesOnly, generateRealisticProgress, generateQuizData, randomSleep } from '../../utils/dataGenerator.js';
 import { getTestOptions } from '../../config/config.js';
 import { logInfo } from '../../utils/logger.js';
 
@@ -55,9 +50,9 @@ export default function () {
   });
   
   group('04_Select_Course', () => {
-    const allCourses = getAllCoursesFromTopics(accessToken);
-    if (allCourses && allCourses.length > 0) {
-      selectedCourse = selectRandom(allCourses);
+    const validCourses = getValidCoursesOnly(getTopics(accessToken));
+    if (validCourses && validCourses.length > 0) {
+      selectedCourse = selectRandom(validCourses);
       check(selectedCourse, {
         'course selected': (c) => c !== null && c.id !== undefined,
       });
@@ -72,7 +67,7 @@ export default function () {
   }
   
   group('05_Enroll_In_Course', () => {
-    const enrollResult = enrollInCourse(accessToken, selectedCourse.id);
+    const enrollResult = enrollInCourse(accessToken, selectedCourse.id, user.id);
     check(enrollResult, {
       'enrollment successful': (r) => r !== null,
     });
@@ -85,11 +80,12 @@ export default function () {
   });
   
   group('07_Progress_Through_Sections', () => {
-    for (let sectionIndex = 0; sectionIndex < 3; sectionIndex++) {
-      const progressData = generateProgressData(selectedCourse.id, sectionIndex);
-      progressData.progress_percentage = ((sectionIndex + 1) / 3) * 100;
-      
-      const progressResult = updateCourseProgress(accessToken, progressData);
+    const validSections = [0, 1, 2];
+    const progressSteps = [33, 66, 100];
+    
+    validSections.forEach((sectionIndex, index) => {
+      const progress = progressSteps[index];
+      const progressResult = updateCourseProgress(accessToken, selectedCourse.id, progress);
       check(progressResult, {
         [`section ${sectionIndex} progress updated`]: (r) => r !== null,
       });
@@ -103,18 +99,11 @@ export default function () {
       });
       
       sleep(randomSleep(2, 3));
-    }
+    });
   });
   
   group('08_Complete_Course', () => {
-    const finalProgressData = {
-      course_id: selectedCourse.id,
-      progress_percentage: 100,
-      completed: true,
-      completed_at: new Date().toISOString(),
-    };
-    
-    const completeResult = updateCourseProgress(accessToken, finalProgressData);
+    const completeResult = updateCourseProgress(accessToken, selectedCourse.id, 100);
     check(completeResult, {
       'course marked as complete': (r) => r !== null,
     });

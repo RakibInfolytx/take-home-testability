@@ -3,11 +3,7 @@ import { setupAuth } from '../../modules/auth.js';
 import { getTopics } from '../../modules/topics.js';
 import { markQuizComplete } from '../../modules/courses.js';
 import { enrollInCourse } from '../../modules/enrollment.js';
-import { 
-  createCourseSectionPairs, 
-  selectRandom,
-  generateQuizData 
-} from '../../utils/dataGenerator.js';
+import { createCourseSectionPairs, selectRandom, generateQuizData } from '../../utils/dataGenerator.js';
 import { CONFIG, getTestOptions } from '../../config/config.js';
 
 export const options = {
@@ -31,7 +27,7 @@ export function setup() {
 }
 
 export default function (data) {
-  const { accessToken, courseSectionPairs } = data;
+  const { accessToken, courseSectionPairs, user } = data;
   
   if (!courseSectionPairs || courseSectionPairs.length === 0) {
     console.error('No course-section pairs available for quiz complete test');
@@ -41,7 +37,7 @@ export default function (data) {
   const pair = selectRandom(courseSectionPairs);
   const { courseId, sectionIndex } = pair;
   
-  enrollInCourse(accessToken, courseId);
+  enrollInCourse(accessToken, courseId, user.id);
   sleep(0.5);
   
   const quizData = generateQuizData();

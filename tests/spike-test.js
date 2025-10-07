@@ -3,14 +3,13 @@ import { setupAuth } from '../modules/auth.js';
 import { getTopics } from '../modules/topics.js';
 import { getCourses } from '../modules/courses.js';
 import { enrollInCourse } from '../modules/enrollment.js';
-import { markQuizComplete } from '../modules/courses.js';
-import { selectRandom, getValidCoursesOnly, generateQuizData, randomSleep } from '../utils/dataGenerator.js';
+import { selectRandom, getValidCoursesOnly, randomSleep } from '../utils/dataGenerator.js';
 import { getTestOptions } from '../config/config.js';
 
 export const options = {
-  ...getTestOptions('stress'),
+  ...getTestOptions('spike'),
   tags: {
-    test_type: 'stress',
+    test_type: 'spike',
   },
 };
 
@@ -28,29 +27,23 @@ export function setup() {
 export default function (data) {
   const { accessToken, validCourses, user } = data;
   
-  const topics = getTopics(accessToken);
-  sleep(randomSleep(0.5, 1));
+  getTopics(accessToken);
+  sleep(randomSleep(0.2, 0.5));
   
-  const courses = getCourses(accessToken);
-  sleep(randomSleep(0.5, 1));
+  getCourses(accessToken);
+  sleep(randomSleep(0.2, 0.5));
   
   if (validCourses && validCourses.length > 0) {
     const course = selectRandom(validCourses);
     enrollInCourse(accessToken, course.id, user.id);
-    sleep(randomSleep(0.3, 0.7));
-    
-    const validSections = [0, 1, 2];
-    const sectionIndex = validSections[Math.floor(Math.random() * validSections.length)];
-    const quizData = generateQuizData();
-    markQuizComplete(accessToken, course.id, sectionIndex, quizData);
-    sleep(randomSleep(0.3, 0.7));
+    sleep(randomSleep(0.2, 0.5));
   }
 }
 
 export function handleSummary(data) {
   return {
     'stdout': JSON.stringify(data, null, 2),
-    'results/stress-test-summary.json': JSON.stringify(data),
+    'results/spike-test-summary.json': JSON.stringify(data),
   };
 }
 

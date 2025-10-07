@@ -1,13 +1,9 @@
 import { sleep } from 'k6';
 import { setupAuth } from '../modules/auth.js';
-import { getTopics, getAllCoursesFromTopics } from '../modules/topics.js';
+import { getTopics } from '../modules/topics.js';
 import { getCourses, updateCourseProgress } from '../modules/courses.js';
 import { enrollInCourse } from '../modules/enrollment.js';
-import { 
-  selectRandom, 
-  generateProgressData,
-  randomSleep 
-} from '../utils/dataGenerator.js';
+import { selectRandom, getValidCoursesOnly, generateRealisticProgress, randomSleep } from '../utils/dataGenerator.js';
 import { getTestOptions } from '../config/config.js';
 
 export const options = {
@@ -22,7 +18,7 @@ export function setup() {
 }
 
 export default function (data) {
-  const { accessToken } = data;
+  const { accessToken, user } = data;
   
   const topics = getTopics(accessToken);
   sleep(randomSleep(2, 3));
@@ -31,15 +27,15 @@ export default function (data) {
     const courses = getCourses(accessToken);
     sleep(randomSleep(2, 3));
     
-    const allCourses = getAllCoursesFromTopics(accessToken);
+    const validCourses = getValidCoursesOnly(topics);
     
-    if (allCourses && allCourses.length > 0) {
-      const selectedCourse = selectRandom(allCourses);
-      enrollInCourse(accessToken, selectedCourse.id);
+    if (validCourses && validCourses.length > 0) {
+      const selectedCourse = selectRandom(validCourses);
+      enrollInCourse(accessToken, selectedCourse.id, user.id);
       sleep(randomSleep(2, 3));
       
-      const progressData = generateProgressData(selectedCourse.id, 0);
-      updateCourseProgress(accessToken, progressData);
+      const progress = generateRealisticProgress();
+      updateCourseProgress(accessToken, selectedCourse.id, progress);
       sleep(randomSleep(2, 3));
     }
   }

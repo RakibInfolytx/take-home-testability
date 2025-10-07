@@ -1,0 +1,174 @@
+name: Performance Tests CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Test type to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - load
+          - stress
+          - soak
+          - spike
+          - endpoints
+          - workflows
+
+jobs:
+  performance-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        test: [load, stress, soak, spike]
+      fail-fast: false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up k6
+        uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: 'latest'
+      
+      - name: Create results directory
+        run: mkdir -p results
+      
+      - name: Run ${{ matrix.test }} test
+        env:
+          BASE_URL: ${{ secrets.BASE_URL || 'https://api.polanji.com' }}
+          USER_EMAIL: ${{ secrets.USER_EMAIL || 'performancetest03@gmail.com' }}
+          USER_PASSWORD: ${{ secrets.USER_PASSWORD || 'user123456' }}
+          VUS: 10
+          DURATION: 2m
+        run: |
+          k6 run tests/${{ matrix.test }}-test.js \
+            --out json=results/${{ matrix.test }}-test-raw.json \
+            --summary-export=results/${{ matrix.test }}-test-summary.json
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ${{ matrix.test }}-test-results
+          path: results/
+          retention-days: 30
+      
+      - name: Check test results
+        run: |
+          if [ -f results/${{ matrix.test }}-test-summary.json ]; then
+            echo "Test summary generated successfully"
+            cat results/${{ matrix.test }}-test-summary.json
+          fi
+
+  endpoint-tests:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        endpoint: [login, topics, courses, enroll, quiz-complete, update-progress]
+      fail-fast: false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up k6
+        uses: grafana/setup-k6-action@v1
+      
+      - name: Create results directory
+        run: mkdir -p results
+      
+      - name: Run ${{ matrix.endpoint }} endpoint test
+        env:
+          BASE_URL: ${{ secrets.BASE_URL || 'https://api.polanji.com' }}
+          USER_EMAIL: ${{ secrets.USER_EMAIL || 'performancetest03@gmail.com' }}
+          USER_PASSWORD: ${{ secrets.USER_PASSWORD || 'user123456' }}
+        run: |
+          k6 run tests/endpoints/${{ matrix.endpoint }}-test.js \
+            --out json=results/${{ matrix.endpoint }}-endpoint-raw.json
+      
+      - name: Upload endpoint test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ${{ matrix.endpoint }}-endpoint-results
+          path: results/
+          retention-days: 30
+
+  workflow-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up k6
+        uses: grafana/setup-k6-action@v1
+      
+      - name: Create results directory
+        run: mkdir -p results
+      
+      - name: Run course completion workflow
+        env:
+          BASE_URL: ${{ secrets.BASE_URL || 'https://api.polanji.com' }}
+          USER_EMAIL: ${{ secrets.USER_EMAIL || 'performancetest03@gmail.com' }}
+          USER_PASSWORD: ${{ secrets.USER_PASSWORD || 'user123456' }}
+        run: |
+          k6 run tests/workflows/course-completion-workflow.js \
+            --out json=results/course-completion-workflow-raw.json
+      
+      - name: Upload workflow test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: workflow-test-results
+          path: results/
+          retention-days: 30
+
+  generate-report:
+    runs-on: ubuntu-latest
+    needs: [performance-test, endpoint-tests, workflow-tests]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: all-results
+      
+      - name: Consolidate results
+        run: |
+          mkdir -p consolidated-results
+          find all-results -name "*.json" -exec cp {} consolidated-results/ \;
+          ls -la consolidated-results/
+      
+      - name: Generate summary
+        run: |
+          echo "# Performance Test Summary" > consolidated-results/SUMMARY.md
+          echo "" >> consolidated-results/SUMMARY.md
+          echo "## Test Run: $(date)" >> consolidated-results/SUMMARY.md
+          echo "" >> consolidated-results/SUMMARY.md
+          echo "All test results have been generated and stored." >> consolidated-results/SUMMARY.md
+      
+      - name: Upload consolidated results
+        uses: actions/upload-artifact@v3
+        with:
+          name: all-performance-test-results
+          path: consolidated-results/
+          retention-days: 90
+

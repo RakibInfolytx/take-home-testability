@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # k6 Performance Testing
+  k6:
+    build: .
+    container_name: k6-performance-tests
+    env_file:
+      - .env
+    volumes:
+      - ./results:/tests/results
+      - ./config:/tests/config
+      - ./modules:/tests/modules
+      - ./tests:/tests/tests
+      - ./utils:/tests/utils
+      - ./scripts:/tests/scripts
+    networks:
+      - k6-network
+    command: run /tests/tests/load-test.js
+
+  # Grafana for visualization (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: k6-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - k6-network
+    profiles:
+      - monitoring
+
+  # InfluxDB for storing k6 metrics (optional)
+  influxdb:
+    image: influxdb:1.8
+    container_name: k6-influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_HTTP_AUTH_ENABLED=false
+    volumes:
+      - influxdb-storage:/var/lib/influxdb
+    networks:
+      - k6-network
+    profiles:
+      - monitoring
+
+networks:
+  k6-network:
+    driver: bridge
+
+volumes:
+  grafana-storage:
+  influxdb-storage:
+

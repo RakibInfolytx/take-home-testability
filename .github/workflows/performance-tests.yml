@@ -35,7 +35,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up k6
         uses: grafana/setup-k6-action@v1
@@ -58,7 +58,7 @@ jobs:
             --summary-export=results/${{ matrix.test }}-test-summary.json
       
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ${{ matrix.test }}-test-results
@@ -82,7 +82,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up k6
         uses: grafana/setup-k6-action@v1
@@ -100,7 +100,7 @@ jobs:
             --out json=results/${{ matrix.endpoint }}-endpoint-raw.json
       
       - name: Upload endpoint test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ${{ matrix.endpoint }}-endpoint-results
@@ -112,7 +112,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/upload-artifact@v4
       
       - name: Set up k6
         uses: grafana/setup-k6-action@v1
@@ -130,7 +130,7 @@ jobs:
             --out json=results/course-completion-workflow-raw.json
       
       - name: Upload workflow test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: workflow-test-results
@@ -144,10 +144,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: all-results
       
@@ -166,7 +166,7 @@ jobs:
           echo "All test results have been generated and stored." >> consolidated-results/SUMMARY.md
       
       - name: Upload consolidated results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: all-performance-test-results
           path: consolidated-results/

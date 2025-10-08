@@ -13,5 +13,13 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# Logs
+*.log
 
+# Docker
+
+
+# Test results
+results/
+reports/
 

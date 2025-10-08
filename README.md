@@ -169,8 +169,12 @@ Results are displayed in the terminal and saved to `results/` directory as JSON 
 ### Generate HTML Reports
 
 ```bash
-npm install -g k6-to-html
-k6-to-html results/load-test-raw.json -o results/report.html
+# Using our custom HTML generator (recommended)
+node scripts/generate-simple-report.js results/load-test-summary.json -o results/report.html
+
+# Or use the automated script
+.\scripts\generate-reports.ps1    # Windows
+bash scripts/generate-reports.sh  # Linux/Mac
 ```
 
 ### Grafana Dashboard
@@ -202,7 +206,6 @@ Key thresholds:
 - P95 response time: < 2000ms
 - Error rate: < 5%
 
-See `PERFORMANCE_ANALYSIS.md` for bottleneck identification.
 
 ## Extending the Framework
 
@@ -214,7 +217,3 @@ Add new workflows in `tests/workflows/` by chaining existing module functions.
 
 - k6 Documentation: https://k6.io/docs/
 - API Documentation: https://api.polanji.com/docs
-
-## License
-
-MIT License

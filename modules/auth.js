@@ -5,12 +5,9 @@ import { logError, logSuccess } from '../utils/logger.js';
 
 export function login(email = CONFIG.USER_EMAIL, password = CONFIG.USER_PASSWORD) {
   const url = `${CONFIG.BASE_URL}/log_in`;
-  
-  const payload = {
-    username: email,
-    password: password,
-    grant_type: 'password',
-  };
+
+
+  const payload = `grant_type=password&username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
 
   const params = {
     headers: {
@@ -27,7 +24,7 @@ export function login(email = CONFIG.USER_EMAIL, password = CONFIG.USER_PASSWORD
     'access token exists': (r) => {
       try {
         const body = JSON.parse(r.body);
-        return body.access_token !== undefined;
+        return !!body.access_token;
       } catch (e) {
         return false;
       }
@@ -35,7 +32,7 @@ export function login(email = CONFIG.USER_EMAIL, password = CONFIG.USER_PASSWORD
     'user data exists': (r) => {
       try {
         const body = JSON.parse(r.body);
-        return body.user !== undefined && body.user.id !== undefined;
+        return body.user && body.user.id;
       } catch (e) {
         return false;
       }
@@ -48,18 +45,21 @@ export function login(email = CONFIG.USER_EMAIL, password = CONFIG.USER_PASSWORD
   }
 
   const authData = JSON.parse(response.body);
+  const cleanToken = authData.access_token.trim().replace(/^"|"$/g, ''); 
+
   logSuccess('Login', response.status, response.timings.duration);
-  
+
   return {
-    accessToken: authData.access_token,
+    accessToken: cleanToken,
     tokenType: authData.token_type,
     user: authData.user,
   };
 }
 
 export function getAuthHeaders(token) {
+  const cleanToken = token.trim().replace(/^"|"$/g, '');
   return {
-    'Authorization': `Bearer ${token}`,
+    'Authorization': `Bearer ${cleanToken}`,
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
@@ -78,4 +78,3 @@ export default {
   getAuthHeaders,
   setupAuth,
 };
-

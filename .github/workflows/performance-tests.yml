@@ -112,7 +112,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/upload-artifact@v4
+        uses: actions/checkout@v4
       
       - name: Set up k6
         uses: grafana/setup-k6-action@v1

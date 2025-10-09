@@ -20,7 +20,10 @@ export const CONFIG = {
 export function getTestOptions(testType) {
   const baseThresholds = {
     'http_req_duration': [`p(95)<${CONFIG.HTTP_REQ_DURATION_P95}`],
-    'http_req_failed': [`rate<${CONFIG.HTTP_REQ_FAILED_RATE}`],
+    'http_req_failed': [
+      `rate<${CONFIG.HTTP_REQ_FAILED_RATE}`,
+      { threshold: `rate<${CONFIG.HTTP_REQ_FAILED_RATE}`, abortOnFail: true }
+    ],
   };
 
   switch (testType) {
@@ -77,4 +80,3 @@ export function getTestOptions(testType) {
 }
 
 export default CONFIG;
-
